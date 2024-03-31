@@ -98,22 +98,24 @@ public abstract class IteratorSourceReaderBase<
 
     @Override
     public InputStatus pollNext(ReaderOutput<O> output) {
-        if (iterator != null) {
-            if (iterator.hasNext()) {
-                output.collect(convert(iterator.next()));
-                return InputStatus.MORE_AVAILABLE;
-            } else {
-                finishSplit();
+        if (iterator == null) {
+            // update iterator and split
+            final InputStatus inputStatus = tryMoveToNextSplit();
+            if (inputStatus != InputStatus.MORE_AVAILABLE) {
+                return inputStatus;
             }
         }
-        final InputStatus inputStatus = tryMoveToNextSplit();
-        if (inputStatus == InputStatus.MORE_AVAILABLE) {
+        if (iterator.hasNext()) {
             output.collect(convert(iterator.next()));
+        } else {
+            finishSplit();
         }
-        return inputStatus;
+        // Do this poll again.
+        return InputStatus.MORE_AVAILABLE;
     }
 
     protected abstract O convert(E value);
+
 
     private void finishSplit() {
         iterator = null;
