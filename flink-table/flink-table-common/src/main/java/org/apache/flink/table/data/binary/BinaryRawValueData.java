@@ -58,15 +58,18 @@ public final class BinaryRawValueData<T> extends LazyBinaryFormat<T> implements 
 
     @Override
     public T toObject(TypeSerializer<T> serializer) {
-        if (javaObject == null) {
+        T object = javaObject;
+        if (object == null) {
             try {
-                javaObject =
-                        InstantiationUtil.deserializeFromByteArray(serializer, toBytes(serializer));
+                object =
+                        installJavaObject(
+                                InstantiationUtil.deserializeFromByteArray(
+                                        serializer, toBytes(serializer)));
             } catch (IOException e) {
                 throw new FlinkRuntimeException(e);
             }
         }
-        return javaObject;
+        return object;
     }
 
     @Override
