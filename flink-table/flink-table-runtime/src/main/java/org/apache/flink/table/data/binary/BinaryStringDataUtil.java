@@ -48,22 +48,29 @@ import static org.apache.flink.table.data.binary.BinaryStringData.numBytesForFir
 /** Util for {@link BinaryStringData}. */
 public class BinaryStringDataUtil {
 
-    public static final BinaryStringData NULL_STRING = fromString("NULL");
-    public static final BinaryStringData TRUE_STRING = fromString("TRUE");
-    public static final BinaryStringData FALSE_STRING = fromString("FALSE");
+    // Generated casts return these constants, so every task thread can read them. Materializing
+    // them during class initialization publishes their binary form safely; a lazy first
+    // materialization from a task thread would not be.
+    public static final BinaryStringData NULL_STRING = materialized("NULL");
+    public static final BinaryStringData TRUE_STRING = materialized("TRUE");
+    public static final BinaryStringData FALSE_STRING = materialized("FALSE");
 
     public static final BinaryStringData[] EMPTY_STRING_ARRAY = new BinaryStringData[0];
     private static final List<BinaryStringData> TRUE_STRINGS =
             Stream.of("t", "true", "y", "yes", "1")
-                    .map(BinaryStringData::fromString)
-                    .peek(BinaryStringData::ensureMaterialized)
+                    .map(BinaryStringDataUtil::materialized)
                     .collect(Collectors.toList());
 
     private static final List<BinaryStringData> FALSE_STRINGS =
             Stream.of("f", "false", "n", "no", "0")
-                    .map(BinaryStringData::fromString)
-                    .peek(BinaryStringData::ensureMaterialized)
+                    .map(BinaryStringDataUtil::materialized)
                     .collect(Collectors.toList());
+
+    private static BinaryStringData materialized(String value) {
+        BinaryStringData string = fromString(value);
+        string.ensureMaterialized();
+        return string;
+    }
 
     private static byte[] getTmpBytes(BinaryStringData str, int sizeInBytes) {
         byte[] bytes = SegmentsUtil.allocateReuseBytes(sizeInBytes);

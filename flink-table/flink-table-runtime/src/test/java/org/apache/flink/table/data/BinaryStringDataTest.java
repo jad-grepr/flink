@@ -21,6 +21,7 @@ import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
 import org.apache.flink.table.data.binary.BinaryRowData;
 import org.apache.flink.table.data.binary.BinaryStringData;
+import org.apache.flink.table.data.binary.BinaryStringDataUtil;
 import org.apache.flink.table.data.binary.StringUtf8Utils;
 import org.apache.flink.table.data.writer.BinaryRowWriter;
 import org.apache.flink.table.runtime.operators.sort.SortUtil;
@@ -271,6 +272,13 @@ class BinaryStringDataTest {
 
             // check reference same.
             assertThat(str.toString()).isSameAs(javaStr);
+        }
+
+        @Test
+        void testSharedConstantsAreMaterialized() {
+            assertThat(BinaryStringDataUtil.NULL_STRING.getBinarySection()).isNotNull();
+            assertThat(BinaryStringDataUtil.TRUE_STRING.getBinarySection()).isNotNull();
+            assertThat(BinaryStringDataUtil.FALSE_STRING.getBinarySection()).isNotNull();
         }
     }
 
